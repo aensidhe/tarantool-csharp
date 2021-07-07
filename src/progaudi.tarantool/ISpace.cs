@@ -8,7 +8,7 @@ using ProGaudi.Tarantool.Client.Model.UpdateOperations;
 
 namespace ProGaudi.Tarantool.Client
 {
-    public interface ISpace
+    public interface ISpace : IReadOnlyDictionary<string, IIndex>, IReadOnlyDictionary<uint, IIndex>
     {
         uint Id { get; }
 
@@ -30,10 +30,6 @@ namespace ProGaudi.Tarantool.Client
         [Obsolete("Use indexer")]
         Task<IIndex> GetIndex(uint indexId);
 
-        IIndex this[string name] { get; }
-
-        IIndex this[uint id] { get; }
-
         Task<DataResponse<TTuple[]>> Insert<TTuple>(TTuple tuple);
 
         Task<DataResponse<TTuple[]>> Select<TKey, TTuple>(TKey selectKey);
@@ -49,10 +45,6 @@ namespace ProGaudi.Tarantool.Client
         Task Upsert<TTuple>(TTuple tuple, UpdateOperation[] updateOperations);
 
         Task<DataResponse<TTuple[]>> Delete<TKey, TTuple>(TKey key);
-
-        Task<uint> Count<TKey>(TKey key);
-
-        Task<uint> Length();
 
         Task<DataResponse<TTuple[]>> Increment<TTuple, TKey>(TKey key);
 

@@ -4,15 +4,12 @@ using System.Threading.Tasks;
 
 namespace ProGaudi.Tarantool.Client
 {
-    public interface ISchema
+    public interface ISchema : IReadOnlyDictionary<string, ISpace>, IReadOnlyDictionary<uint, ISpace>
     {
         [Obsolete("Use indexer")]
         Task<ISpace> GetSpace(string name);
         [Obsolete("Use indexer")]
         Task<ISpace> GetSpace(uint id);
-
-        ISpace this[string name] { get; }
-        ISpace this[uint id] { get; }
 
         Task Reload();
 

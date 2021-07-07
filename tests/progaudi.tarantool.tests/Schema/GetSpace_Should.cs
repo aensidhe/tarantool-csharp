@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Xunit;
@@ -78,6 +79,18 @@ namespace ProGaudi.Tarantool.Client.Tests.Schema
                     var space = schema[VSpaceName];
 
                     space.Name.ShouldBe(VSpaceName);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task iterating_over_schema()
+        {
+            using (var tarantoolClient = await Client.Box.Connect(ConnectionStringFactory.GetReplicationSource_1_7()))
+            {
+                foreach (var pair in (IReadOnlyDictionary<string, ISpace>)tarantoolClient.Schema)
+                {
+                    pair.Value.Name.ShouldBe(pair.Key);
                 }
             }
         }

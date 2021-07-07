@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -60,13 +61,17 @@ namespace ProGaudi.Tarantool.Client
 
         public IReadOnlyCollection<SpaceField> Fields { get; }
 
-        public Task<IIndex> GetIndex(string name) => Task.FromResult(_indexByName.TryGetValue(name, out var index) ? index : throw ExceptionHelper.InvalidIndexName(name, Name));
+        public Task<IIndex> GetIndex(string name) => Task.FromResult(this[name]);
 
-        public Task<IIndex> GetIndex(uint id) => Task.FromResult(_indexById.TryGetValue(id, out var index) ? index : throw ExceptionHelper.InvalidIndexId(id, Name));
+        public Task<IIndex> GetIndex(uint id) => Task.FromResult(this[id]);
 
-        public IIndex this[string name] => _indexByName.TryGetValue(name, out var index) ? index : throw ExceptionHelper.InvalidIndexName(name, Name);
+        public IIndex this[string name] => _indexByName.TryGetValue(name, out var index)
+            ? index
+            : throw ExceptionHelper.InvalidIndexName(name, Name);
 
-        public IIndex this[uint id] => _indexById.TryGetValue(id, out var index) ? index : throw ExceptionHelper.InvalidIndexId(id, Name);
+        public IIndex this[uint id] => _indexById.TryGetValue(id, out var index)
+            ? index
+            : throw ExceptionHelper.InvalidIndexId(id, Name);
 
         public async Task<DataResponse<TTuple[]>> Insert<TTuple>(TTuple tuple)
         {
@@ -117,16 +122,6 @@ namespace ProGaudi.Tarantool.Client
             return await LogicalConnection.SendRequest<DeleteRequest<TKey>, TTuple>(deleteRequest).ConfigureAwait(false);
         }
 
-        public Task<uint> Count<TKey>(TKey key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<uint> Length()
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<DataResponse<TTuple[]>> Increment<TTuple, TKey>(TKey key)
         {
             // Currently we can't impelment that method because Upsert returns void.
@@ -143,5 +138,31 @@ namespace ProGaudi.Tarantool.Client
         {
             return $"{Name}, id={Id}";
         }
+
+        IEnumerator<KeyValuePair<uint, IIndex>> IEnumerable<KeyValuePair<uint, IIndex>>.GetEnumerator() => _indexById.GetEnumerator();
+
+        IEnumerator<KeyValuePair<string, IIndex>> IEnumerable<KeyValuePair<string, IIndex>>.GetEnumerator() => _indexByName.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException();
+
+        int IReadOnlyCollection<KeyValuePair<string, IIndex>>.Count => _indexById.Count;
+
+        bool IReadOnlyDictionary<string, IIndex>.ContainsKey(string key) => _indexByName.ContainsKey(key);
+
+        bool IReadOnlyDictionary<string, IIndex>.TryGetValue(string key, out IIndex value) => _indexByName.TryGetValue(key, out value);
+
+        bool IReadOnlyDictionary<uint, IIndex>.ContainsKey(uint key) => _indexById.ContainsKey(key);
+
+        bool IReadOnlyDictionary<uint, IIndex>.TryGetValue(uint key, out IIndex value) => _indexById.TryGetValue(key, out value);
+
+        IEnumerable<uint> IReadOnlyDictionary<uint, IIndex>.Keys => _indexById.Keys;
+
+        IEnumerable<IIndex> IReadOnlyDictionary<uint, IIndex>.Values => _indexById.Values;
+
+        IEnumerable<string> IReadOnlyDictionary<string, IIndex>.Keys => _indexByName.Keys;
+
+        IEnumerable<IIndex> IReadOnlyDictionary<string, IIndex>.Values => _indexByName.Values;
+
+        int IReadOnlyCollection<KeyValuePair<uint, IIndex>>.Count => _indexById.Count;
     }
 }
